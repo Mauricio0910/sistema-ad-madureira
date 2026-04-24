@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AD Nação Madureira – Araguaína</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --primary: #1a3a6e;
+    --primary-light: #2a5298;
+    --accent: #c9a227;
+    --accent-light: #f0c84b;
+    --danger: #b91c1c;
+    --success: #15803d;
+    --warning: #b45309;
+    --bg: #f4f6fa;
+    --card: #ffffff;
+    --border: #dde3ef;
+    --text: #1a2236;
+    --text2: #4a5568;
+    --text3: #8898aa;
+    --sidebar-w: 240px;
+    --header-h: 60px;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+  h1,h2,h3,h4 { font-family: 'Sora', sans-serif; }
+
+  /* ─── LAYOUT ──────────────────────────────── */
+  #app { display: flex; min-height: 100vh; }
+  #sidebar {
+    width: var(--sidebar-w); background: var(--primary); color: #fff;
+    display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh;
+    z-index: 100; transition: transform .3s;
+  }
+  #sidebar .logo {
+    padding: 18px 16px 14px; border-bottom: 1px solid rgba(255,255,255,.12);
+    display: flex; align-items: center; gap: 10px;
+  }
+  #sidebar .logo-icon {
+    width: 38px; height: 38px; background: var(--accent); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Sora', sans-serif; font-weight: 700; font-size: 16px; color: var(--primary);
+  }
+  #sidebar .logo-text { font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 600; line-height: 1.3; }
+  #sidebar .logo-text span { display: block; font-size: 11px; font-weight: 400; opacity: .7; }
+  #sidebar nav { flex: 1; overflow-y: auto; padding: 12px 0; }
+  #sidebar nav .nav-section { font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.45); padding: 16px 16px 4px; }
+  #sidebar nav a {
+    display: flex; align-items: center; gap: 10px; padding: 9px 16px;
+    color: rgba(255,255,255,.8); text-decoration: none; font-size: 13.5px;
+    border-left: 3px solid transparent; transition: all .15s; cursor: pointer;
+  }
+  #sidebar nav a:hover, #sidebar nav a.active {
+    background: rgba(255,255,255,.08); color: #fff; border-left-color: var(--accent);
+  }
+  #sidebar nav a .nav-icon { font-size: 15px; width: 18px; text-align: center; }
+  #sidebar .user-info {
+    padding: 12px 16px; border-top: 1px solid rgba(255,255,255,.12);
+    display: flex; align-items: center; gap: 10px; font-size: 12px;
+  }
+  #sidebar .user-avatar {
+    width: 32px; height: 32px; border-radius: 50%; background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px; color: var(--primary); flex-shrink: 0;
+  }
+  #sidebar .user-role { color: rgba(255,255,255,.55); font-size: 11px; }
+
+  #main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+  #topbar {
+    background: var(--card); border-bottom: 1px solid var(--border);
+    height: var(--header-h); display: flex; align-items: center;
+    padding: 0 24px; gap: 16px; position: sticky; top: 0; z-index: 50;
+  }
+  #topbar h2 { font-size: 17px; font-weight: 600; flex: 1; }
+  #topbar .badge { background: var(--accent); color: var(--primary); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+  #content { flex: 1; padding: 24px; }
+
+  /* ─── CARDS ──────────────────────────────── */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); }
+  .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .card-header h3 { font-size: 15px; font-weight: 600; }
+  .card-body { padding: 20px; }
+
+  /* ─── GRID STATS ─────────────────────────── */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px 18px; display: flex; flex-direction: column; gap: 6px;
+  }
+  .stat-card .stat-label { font-size: 12px; color: var(--text3); font-weight: 500; }
+  .stat-card .stat-val { font-size: 28px; font-weight: 700; font-family: 'Sora', sans-serif; color: var(--primary); }
+  .stat-card .stat-sub { font-size: 11px; color: var(--text3); }
+  .stat-card.accent { border-left: 4px solid var(--accent); }
+  .stat-card.success { border-left: 4px solid var(--success); }
+  .stat-card.info { border-left: 4px solid var(--primary-light); }
+  .stat-card.warn { border-left: 4px solid var(--warning); }
+
+  /* ─── FORMS ──────────────────────────────── */
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group label { font-size: 12.5px; font-weight: 500; color: var(--text2); }
+  .form-group input, .form-group select, .form-group textarea {
+    border: 1px solid var(--border); border-radius: 7px; padding: 9px 12px;
+    font-size: 13.5px; font-family: inherit; background: #fff; color: var(--text);
+    transition: border-color .15s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none; border-color: var(--primary-light);
+    box-shadow: 0 0 0 3px rgba(42,82,152,.1);
+  }
+  .form-group textarea { resize: vertical; min-height: 80px; }
+  .form-group.full { grid-column: 1 / -1; }
+
+  /* ─── BUTTONS ────────────────────────────── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px;
+    border-radius: 7px; font-size: 13.5px; font-weight: 500; font-family: inherit;
+    cursor: pointer; border: none; transition: all .15s;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-light); }
+  .btn-accent { background: var(--accent); color: var(--primary); }
+  .btn-accent:hover { background: var(--accent-light); }
+  .btn-outline { background: transparent; color: var(--primary); border: 1px solid var(--border); }
+  .btn-outline:hover { background: var(--bg); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-danger:hover { background: #991b1b; }
+  .btn-success { background: var(--success); color: #fff; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+  .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* ─── TABLE ──────────────────────────────── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th { background: var(--bg); color: var(--text2); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+  tbody td { padding: 11px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: #f8f9ff; }
+
+  /* ─── BADGES ─────────────────────────────── */
+  .badge-pill { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600; }
+  .badge-membro { background: #dbeafe; color: #1e3a8a; }
+  .badge-congregado { background: #fef3c7; color: #92400e; }
+  .badge-crianca { background: #d1fae5; color: #065f46; }
+  .badge-adolescente { background: #ede9fe; color: #4c1d95; }
+  .badge-jovem { background: #fce7f3; color: #831843; }
+  .badge-adulto { background: #e0f2fe; color: #0c4a6e; }
+  .badge-ativo { background: #d1fae5; color: #065f46; }
+  .badge-inativo { background: #fee2e2; color: #991b1b; }
+  .badge-admin { background: var(--primary); color: #fff; }
+  .badge-pastor { background: #1e3a8a; color: #fff; }
+  .badge-secretario { background: #065f46; color: #fff; }
+  .badge-dirigente { background: #4c1d95; color: #fff; }
+
+  /* ─── TABS ───────────────────────────────── */
+  .tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--border); margin-bottom: 20px; }
+  .tab { padding: 9px 16px; font-size: 13.5px; font-weight: 500; cursor: pointer; color: var(--text3); border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all .15s; }
+  .tab:hover { color: var(--primary); }
+  .tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+
+  /* ─── MODAL ──────────────────────────────── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200;
+    display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card); border-radius: 14px; width: 100%; max-width: 640px;
+    max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.2);
+  }
+  .modal-header { padding: 18px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .modal-header h3 { font-size: 16px; font-weight: 600; }
+  .modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text3); line-height: 1; }
+  .modal-body { padding: 22px; }
+  .modal-footer { padding: 16px 22px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+
+  /* ─── ALERT ──────────────────────────────── */
+  .alert { padding: 12px 16px; border-radius: 8px; font-size: 13.5px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .alert-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+  .alert-danger { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+  .alert-info { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+
+  /* ─── LOGIN ──────────────────────────────── */
+  #login-screen {
+    position: fixed; inset: 0; background: linear-gradient(135deg, #0f1f3d 0%, #1a3a6e 60%, #c9a227 100%);
+    display: flex; align-items: center; justify-content: center; z-index: 999;
+  }
+  #login-screen .login-box {
+    background: #fff; border-radius: 16px; padding: 40px; width: 380px;
+    box-shadow: 0 30px 80px rgba(0,0,0,.3);
+  }
+  #login-screen .login-logo { text-align: center; margin-bottom: 28px; }
+  #login-screen .login-logo .icon { width: 64px; height: 64px; background: var(--primary); border-radius: 14px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
+  #login-screen .login-logo .icon svg { width: 36px; height: 36px; fill: #fff; }
+  #login-screen .login-logo h1 { font-size: 18px; color: var(--primary); }
+  #login-screen .login-logo p { font-size: 12px; color: var(--text3); margin-top: 4px; }
+  #login-screen .login-box .form-group { margin-bottom: 14px; }
+  #login-screen .login-box .btn-primary { width: 100%; justify-content: center; padding: 12px; font-size: 15px; margin-top: 6px; }
+
+  /* ─── PRINT ──────────────────────────────── */
+  @media print {
+    #sidebar, #topbar { display: none !important; }
+    #main { margin-left: 0 !important; }
+    .btn { display: none !important; }
+  }
+
+  /* ─── RESPONSIVE ─────────────────────────── */
+  @media (max-width: 768px) {
+    #sidebar { transform: translateX(-100%); }
+    #sidebar.open { transform: translateX(0); }
+    #main { margin-left: 0; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  .section { display: none; }
+  .section.active { display: block; }
+  .faded { opacity: .5; }
+  .text-center { text-align: center; }
+  .mt-4 { margin-top: 16px; }
+  .mb-4 { margin-bottom: 16px; }
+  .flex { display: flex; }
+  .gap-2 { gap: 8px; }
+  .items-center { align-items: center; }
+  .justify-between { justify-content: space-between; }
+  .w-full { width: 100%; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--text3); }
+  .empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+  .search-row { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+  .search-row input { flex: 1; min-width: 180px; border: 1px solid var(--border); border-radius: 7px; padding: 8px 12px; font-size: 13.5px; }
+  .search-row select { border: 1px solid var(--border); border-radius: 7px; padding: 8px 12px; font-size: 13.5px; font-family: inherit; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+  .text-sm { font-size: 13px; color: var(--text2); }
+  .font-bold { font-weight: 600; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 20px; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════
+     LOGIN
+════════════════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </div>
+      <h1>AD Nação Madureira</h1>
+      <p>Sistema de Gestão — Araguaína/TO</p>
+    </div>
+    <div id="login-error" class="alert alert-danger" style="display:none;margin-bottom:12px;">
+      Usuário ou senha inválidos.
+    </div>
+    <div class="form-group">
+      <label>Usuário</label>
+      <input type="text" id="login-user" placeholder="Digite seu usuário" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label>Senha</label>
+      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <div class="form-group">
+      <label>Perfil de acesso</label>
+      <select id="login-role">
+        <option value="admin">Administrador</option>
+        <option value="pastor_presidente">Pastor Presidente</option>
+        <option value="pastor_dirigente">Pastor Dirigente</option>
+        <option value="secretario">Secretário(a)</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" onclick="doLogin()">Entrar no Sistema</button>
+    <p style="font-size:11px;color:#aaa;text-align:center;margin-top:14px;">Demo: usuário <strong>admin</strong> / senha <strong>1234</strong></p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     SIDEBAR
+════════════════════════════════════════════════ -->
+<div id="app" style="display:none;">
+<div id="sidebar">
+  <div class="logo">
+    <div class="logo-icon">AD</div>
+    <div class="logo-text">Nação Madureira<span>Araguaína – TO</span></div>
+  </div>
+  <nav>
+    <div class="nav-section">Principal</div>
+    <a class="active" onclick="showSection('dashboard')"><span class="nav-icon">📊</span> Dashboard</a>
+    <div class="nav-section">Membros</div>
+    <a onclick="showSection('membros')"><span class="nav-icon">👥</span> Membros & Congregados</a>
+    <a onclick="showSection('congregacoes')"><span class="nav-icon">⛪</span> Congregações</a>
+    <div class="nav-section">Eventos & Secretaria</div>
+    <a onclick="showSection('eventos')"><span class="nav-icon">📅</span> Eventos</a>
+    <a onclick="showSection('atas')"><span class="nav-icon">📋</span> Atas & Registros</a>
+    <a onclick="showSection('relatorios')"><span class="nav-icon">📈</span> Relatórios</a>
+    <div class="nav-section">Administração</div>
+    <a onclick="showSection('usuarios')"><span class="nav-icon">🔐</span> Usuários & Acesso</a>
+    <a onclick="showSection('configuracoes')"><span class="nav-icon">⚙️</span> Configurações</a>
+    <a onclick="doLogout()" style="margin-top:8px;"><span class="nav-icon">🚪</span> Sair</a>
+  </nav>
+  <div class="user-info">
+    <div class="user-avatar" id="sidebar-avatar">A</div>
+    <div>
+      <div id="sidebar-name" style="font-size:12.5px;font-weight:600;">Administrador</div>
+      <div class="user-role" id="sidebar-role">Acesso Total</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     MAIN
+════════════════════════════════════════════════ -->
+<div id="main">
+  <div id="topbar">
+    <h2 id="page-title">Dashboard</h2>
+    <span class="badge">AD Araguaína</span>
+    <span id="topbar-user" style="font-size:13px;color:#666;"></span>
+  </div>
+  <div id="content">
+
+    <!-- ──── DASHBOARD ─────────────────────────────── -->
+    <section id="sec-dashboard" class="section active">
+      <div class="stats-grid" id="dash-stats"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;flex-wrap:wrap;">
+        <div class="card">
+          <div class="card-header"><h3>Distribuição por Faixa Etária</h3></div>
+          <div class="card-body" id="dash-faixas" style="font-size:13.5px;"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Últimos Cadastros</h3></div>
+          <div class="card-body" id="dash-recentes" style="font-size:13.5px;"></div>
+        </div>
+        <div class="card" style="grid-column:1/-1;">
+          <div class="card-header"><h3>Congregações Vinculadas</h3></div>
+          <div class="card-body" id="dash-congregacoes"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ──── MEMBROS ───────────────────────────────── -->
+    <section id="sec-membros" class="section">
+      <div class="btn-group mb-4">
+        <button class="btn btn-primary" onclick="openModal('modal-membro')">＋ Novo Cadastro</button>
+        <button class="btn btn-outline" onclick="exportarLista('membros')">⬇ Exportar</button>
+      </div>
+      <div class="tabs">
+        <div class="tab active" onclick="filterMembros('todos',this)">Todos</div>
+        <div class="tab" onclick="filterMembros('membro',this)">Membros</div>
+        <div class="tab" onclick="filterMembros('congregado',this)">Congregados</div>
+        <div class="tab" onclick="filterMembros('crianca',this)">Crianças</div>
+        <div class="tab" onclick="filterMembros('adolescente',this)">Adolescentes</div>
+        <div class="tab" onclick="filterMembros('jovem',this)">Jovens</div>
+        <div class="tab" onclick="filterMembros('adulto',this)">Adultos</div>
+        <div class="tab" onclick="filterMembros('homem',this)">Homens</div>
+        <div class="tab" onclick="filterMembros('mulher',this)">Mulheres</div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="search-row">
+            <input type="text" id="search-membros" placeholder="Buscar por nome, CPF, telefone..." oninput="renderMembros()">
+            <select id="filter-congregacao" onchange="renderMembros()">
+              <option value="">Todas as congregações</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Nome</th><th>Nascimento/Idade</th><th>Faixa</th><th>Situação</th><th>Sexo</th><th>Congregação</th><th>Telefone</th><th>Ações</th></tr></thead>
+              <tbody id="tbody-membros"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ──── CONGREGAÇÕES ──────────────────────────── -->
+    <section id="sec-congregacoes" class="section">
+      <div class="btn-group mb-4">
+        <button class="btn btn-primary" onclick="openModal('modal-congregacao')">＋ Nova Congregação</button>
+      </div>
+      <div class="card" id="lista-congregacoes-card">
+        <div class="card-body">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Nome</th><th>Pastor Dirigente</th><th>Endereço</th><th>Membros</th><th>Congregados</th><th>Ações</th></tr></thead>
+              <tbody id="tbody-congregacoes"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ──── EVENTOS ───────────────────────────────── -->
+    <section id="sec-eventos" class="section">
+      <div class="btn-group mb-4">
+        <button class="btn btn-primary" onclick="openModal('modal-evento')">＋ Novo Evento</button>
+      </div>
+      <div id="lista-eventos" style="display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));"></div>
+    </section>
+
+    <!-- ──── ATAS ───────────────────────────────────── -->
+    <section id="sec-atas" class="section">
+      <div class="btn-group mb-4">
+        <button class="btn btn-primary" onclick="openModal('modal-ata')">＋ Nova Ata/Registro</button>
+        <button class="btn btn-outline" onclick="exportarLista('atas')">⬇ Exportar</button>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Tipo</th><th>Assunto</th><th>Data</th><th>Secretário</th><th>Anexo</th><th>Ações</th></tr></thead>
+              <tbody id="tbody-atas"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ──── RELATÓRIOS ─────────────────────────────── -->
+    <section id="sec-relatorios" class="section">
+      <h2 style="font-size:18px;font-weight:600;margin-bottom:20px;">Relatórios Gerais</h2>
+      <div class="tabs">
+        <div class="tab active" onclick="showRel('rel-geral',this)">Geral</div>
+        <div class="tab" onclick="showRel('rel-membros',this)">Membros</div>
+        <div class="tab" onclick="showRel('rel-congregacoes',this)">Congregações</div>
+        <div class="tab" onclick="showRel('rel-eventos',this)">Eventos</div>
+      </div>
+      <div id="rel-geral" class="rel-section"></div>
+      <div id="rel-membros" class="rel-section" style="display:none;"></div>
+      <div id="rel-congregacoes" class="rel-section" style="display:none;"></div>
+      <div id="rel-eventos" class="rel-section" style="display:none;"></div>
+    </section>
+
+    <!-- ──── USUÁRIOS ───────────────────────────────── -->
+    <section id="sec-usuarios" class="section">
+      <div class="btn-group mb-4">
+        <button class="btn btn-primary" onclick="openModal('modal-usuario')">＋ Novo Usuário</button>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Nome</th><th>Usuário</th><th>Perfil</th><th>Congregação</th><th>Status</th><th>Ações</th></tr></thead>
+              <tbody id="tbody-usuarios"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ──── CONFIGURAÇÕES ─────────────────────────── -->
+    <section id="sec-configuracoes" class="section">
+      <div class="card">
+        <div class="card-header"><h3>Configurações do Sistema</h3></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group"><label>Nome da Igreja</label><input type="text" value="Assembleia de Deus Nação Madureira"></div>
+            <div class="form-group"><label>Campo</label><input type="text" value="Araguaína – Tocantins"></div>
+            <div class="form-group"><label>CNPJ</label><input type="text" placeholder="00.000.000/0000-00"></div>
+            <div class="form-group"><label>Telefone</label><input type="text" placeholder="(63) 0000-0000"></div>
+            <div class="form-group full"><label>Endereço da Matriz</label><input type="text" placeholder="Rua, número, bairro, Araguaína/TO"></div>
+          </div>
+          <hr class="divider">
+          <h4 style="font-size:14px;margin-bottom:12px;">Faixas Etárias (configuráveis)</h4>
+          <div class="form-grid">
+            <div class="form-group"><label>Criança: 0 a</label><input type="number" value="11" min="1" max="17"> anos</div>
+            <div class="form-group"><label>Adolescente: 12 a</label><input type="number" value="17" min="12" max="20"> anos</div>
+            <div class="form-group"><label>Jovem: 18 a</label><input type="number" value="35" min="18" max="50"> anos</div>
+            <div class="form-group"><label>Adulto: acima de</label><input type="number" value="35" min="18" max="60"> anos</div>
+          </div>
+          <hr class="divider">
+          <button class="btn btn-primary">💾 Salvar Configurações</button>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ════════════════════════════════════════════════
+     MODAIS
+════════════════════════════════════════════════ -->
+
+<!-- Modal Membro -->
+<div class="modal-overlay" id="modal-membro">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-membro-title">Novo Cadastro de Pessoa</h3>
+      <button class="modal-close" onclick="closeModal('modal-membro')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="tabs" style="margin-bottom:16px;">
+        <div class="tab active" onclick="switchTab('dados-pessoais',this)">Dados Pessoais</div>
+        <div class="tab" onclick="switchTab('dados-eclesiasticos',this)">Dados Eclesiásticos</div>
+        <div class="tab" onclick="switchTab('dados-contato',this)">Contato</div>
+      </div>
+      <div id="dados-pessoais">
+        <div class="form-grid">
+          <div class="form-group full"><label>Nome Completo *</label><input type="text" id="m-nome" placeholder="Nome completo"></div>
+          <div class="form-group"><label>CPF</label><input type="text" id="m-cpf" placeholder="000.000.000-00" maxlength="14"></div>
+          <div class="form-group"><label>RG</label><input type="text" id="m-rg" placeholder="0000000"></div>
+          <div class="form-group"><label>Data de Nascimento *</label><input type="date" id="m-nasc"></div>
+          <div class="form-group"><label>Sexo *</label>
+            <select id="m-sexo"><option value="">Selecione</option><option>Masculino</option><option>Feminino</option></select>
+          </div>
+          <div class="form-group"><label>Estado Civil</label>
+            <select id="m-estado-civil"><option>Solteiro(a)</option><option>Casado(a)</option><option>Divorciado(a)</option><option>Viúvo(a)</option></select>
+          </div>
+          <div class="form-group"><label>Naturalidade</label><input type="text" id="m-natural" placeholder="Cidade/Estado"></div>
+          <div class="form-group"><label>Profissão</label><input type="text" id="m-profissao" placeholder="Profissão"></div>
+        </div>
+      </div>
+      <div id="dados-eclesiasticos" style="display:none;">
+        <div class="form-grid">
+          <div class="form-group"><label>Situação *</label>
+            <select id="m-situacao">
+              <option value="congregado">Congregado</option>
+              <option value="membro">Membro (Batizado)</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Data de Batismo</label><input type="date" id="m-batismo"></div>
+          <div class="form-group"><label>Congregação *</label>
+            <select id="m-congregacao-link"><option value="matriz">Matriz (Sede)</option></select>
+          </div>
+          <div class="form-group"><label>Cargo/Função</label>
+            <select id="m-cargo">
+              <option value="">Nenhum</option>
+              <option>Diácono(a)</option><option>Presbítero</option><option>Evangelista</option>
+              <option>Pastor</option><option>Obreiro(a)</option><option>Líder de Ministério</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Data de Entrada</label><input type="date" id="m-entrada"></div>
+          <div class="form-group"><label>Status</label>
+            <select id="m-status"><option value="ativo">Ativo</option><option value="inativo">Inativo</option><option value="transferido">Transferido</option><option value="falecido">Falecido</option></select>
+          </div>
+          <div class="form-group full"><label>Observações</label><textarea id="m-obs" placeholder="Observações sobre o membro..."></textarea></div>
+        </div>
+      </div>
+      <div id="dados-contato" style="display:none;">
+        <div class="form-grid">
+          <div class="form-group"><label>Telefone *</label><input type="text" id="m-tel" placeholder="(63) 90000-0000"></div>
+          <div class="form-group"><label>WhatsApp</label><input type="text" id="m-wpp" placeholder="(63) 90000-0000"></div>
+          <div class="form-group"><label>E-mail</label><input type="email" id="m-email" placeholder="email@exemplo.com"></div>
+          <div class="form-group full"><label>Endereço</label><input type="text" id="m-end" placeholder="Rua, número, bairro"></div>
+          <div class="form-group"><label>Cidade</label><input type="text" id="m-cidade" value="Araguaína"></div>
+          <div class="form-group"><label>UF</label><input type="text" id="m-uf" value="TO" maxlength="2"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-membro')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarMembro()">💾 Salvar Cadastro</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Congregação -->
+<div class="modal-overlay" id="modal-congregacao">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Nova Congregação</h3>
+      <button class="modal-close" onclick="closeModal('modal-congregacao')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full"><label>Nome da Congregação *</label><input type="text" id="cg-nome" placeholder="Ex: Congregação Setor Norte"></div>
+        <div class="form-group full"><label>Pastor Dirigente *</label>
+          <select id="cg-pastor"><option value="">Selecione o pastor</option></select>
+        </div>
+        <div class="form-group full"><label>Endereço</label><input type="text" id="cg-end" placeholder="Endereço completo"></div>
+        <div class="form-group"><label>Bairro</label><input type="text" id="cg-bairro"></div>
+        <div class="form-group"><label>Telefone</label><input type="text" id="cg-tel"></div>
+        <div class="form-group"><label>Data de Fundação</label><input type="date" id="cg-data"></div>
+        <div class="form-group"><label>Status</label>
+          <select id="cg-status"><option value="ativa">Ativa</option><option value="inativa">Inativa</option></select>
+        </div>
+        <div class="form-group full"><label>Obs.</label><textarea id="cg-obs" rows="2"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-congregacao')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarCongregacao()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Evento -->
+<div class="modal-overlay" id="modal-evento">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Cadastro de Evento</h3>
+      <button class="modal-close" onclick="closeModal('modal-evento')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full"><label>Nome do Evento *</label><input type="text" id="ev-nome" placeholder="Ex: Congresso de Jovens 2025"></div>
+        <div class="form-group"><label>Tipo</label>
+          <select id="ev-tipo">
+            <option>Culto Especial</option><option>Congresso</option><option>Conferência</option>
+            <option>Batismo</option><option>Santa Ceia</option><option>Convenção</option>
+            <option>Retiro</option><option>Evangelismo</option><option>Outro</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Data *</label><input type="date" id="ev-data"></div>
+        <div class="form-group"><label>Horário</label><input type="time" id="ev-hora"></div>
+        <div class="form-group full"><label>Local</label><input type="text" id="ev-local" placeholder="Sede, congregação ou endereço" value="Sede – Araguaína/TO"></div>
+        <div class="form-group"><label>Campo</label><input type="text" id="ev-campo" value="Araguaína – TO" readonly></div>
+        <div class="form-group"><label>Palestrante / Ministro</label><input type="text" id="ev-min" placeholder="Nome do ministro"></div>
+        <div class="form-group full"><label>Descrição</label><textarea id="ev-desc" rows="2" placeholder="Breve descrição do evento..."></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-evento')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarEvento()">💾 Salvar Evento</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Ata -->
+<div class="modal-overlay" id="modal-ata">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Nova Ata / Registro</h3>
+      <button class="modal-close" onclick="closeModal('modal-ata')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>Tipo *</label>
+          <select id="at-tipo">
+            <option>Ata de Reunião</option><option>Ata de Assembleia</option>
+            <option>Ata de Eleição</option><option>Relatório Mensal</option>
+            <option>Relatório Anual</option><option>Ofício</option>
+            <option>Requerimento</option><option>Outro</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Data *</label><input type="date" id="at-data"></div>
+        <div class="form-group full"><label>Assunto / Título *</label><input type="text" id="at-assunto" placeholder="Assunto da ata ou registro"></div>
+        <div class="form-group"><label>Secretário(a)</label><input type="text" id="at-secretario" placeholder="Nome do secretário"></div>
+        <div class="form-group"><label>Número / Protocolo</label><input type="text" id="at-num" placeholder="Ex: ATA-2025/001"></div>
+        <div class="form-group full"><label>Conteúdo / Texto</label><textarea id="at-texto" rows="6" placeholder="Texto completo da ata ou registro..."></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-ata')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarAta()">💾 Registrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Usuário -->
+<div class="modal-overlay" id="modal-usuario">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Novo Usuário do Sistema</h3>
+      <button class="modal-close" onclick="closeModal('modal-usuario')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full"><label>Nome Completo *</label><input type="text" id="us-nome" placeholder="Nome completo"></div>
+        <div class="form-group"><label>Login / Usuário *</label><input type="text" id="us-login" placeholder="usuario123"></div>
+        <div class="form-group"><label>Senha *</label><input type="password" id="us-senha" placeholder="Mínimo 6 caracteres"></div>
+        <div class="form-group"><label>Perfil de Acesso *</label>
+          <select id="us-perfil">
+            <option value="admin">Administrador</option>
+            <option value="pastor_presidente">Pastor Presidente</option>
+            <option value="pastor_dirigente">Pastor Dirigente</option>
+            <option value="secretario">Secretário(a)</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Congregação Responsável</label>
+          <select id="us-congregacao"><option value="matriz">Matriz (Sede)</option></select>
+        </div>
+        <div class="form-group"><label>Status</label>
+          <select id="us-status"><option value="ativo">Ativo</option><option value="inativo">Inativo</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-usuario')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarUsuario()">💾 Criar Usuário</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Detalhe Evento (inscrições) -->
+<div class="modal-overlay" id="modal-evento-detalhe">
+  <div class="modal" style="max-width:720px;">
+    <div class="modal-header">
+      <h3 id="det-ev-title">Detalhes do Evento</h3>
+      <button class="modal-close" onclick="closeModal('modal-evento-detalhe')">×</button>
+    </div>
+    <div class="modal-body" id="det-ev-body">
+      <div class="form-grid" style="margin-bottom:16px;">
+        <div class="form-group full"><label>Adicionar Inscrição</label>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="insc-nome" placeholder="Nome completo">
+            <input type="text" id="insc-cpf" placeholder="CPF" style="max-width:140px;">
+            <input type="text" id="insc-tel" placeholder="Telefone" style="max-width:140px;">
+            <button class="btn btn-primary btn-sm" onclick="addInscricao()">+ Add</button>
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nome</th><th>CPF</th><th>Telefone</th><th>Campo</th><th></th></tr></thead>
+          <tbody id="tbody-inscricoes"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="exportInscricoes()">⬇ Exportar Lista</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-evento-detalhe')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" style="
+  position:fixed;bottom:24px;right:24px;background:#1a3a6e;color:#fff;
+  padding:12px 20px;border-radius:10px;font-size:13.5px;font-weight:500;
+  z-index:9999;display:none;box-shadow:0 8px 24px rgba(0,0,0,.2);
+  max-width:320px;
+"></div>
+
+<script>
+// ════════════════════════════════════════════════════════
+//  SUPABASE – BANCO DE DADOS ONLINE
+// ════════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://yhmupyqclasnvpkoqvdm.supabase.co';
+const SUPABASE_KEY = 'sb_publishable__iPINciwY1iCzBUAce4FPQ_wyFYovJC';
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ════════════════════════════════════════════════════════
+//  ESTADO GLOBAL
+// ════════════════════════════════════════════════════════
+const STATE = {
+  currentUser: null,
+  membros: [],
+  congregacoes: [],
+  eventos: [],
+  atas: [],
+  usuarios: [],
+  eventoAtivo: null,
+  membroFilter: 'todos',
+};
+
+// ════════════════════════════════════════════════════════
+//  FUNÇÕES DE BANCO DE DADOS
+// ════════════════════════════════════════════════════════
+async function dbCarregar(tabela, ordem) {
+  try {
+    let q = db.from(tabela).select('*');
+    if(ordem) q = q.order(ordem);
+    const { data, error } = await q;
+    if(error) { console.error('Erro ao carregar '+tabela+':', error); return []; }
+    return data || [];
+  } catch(e) { console.error(e); return []; }
+}
+async function dbInserir(tabela, dados) {
+  const { data, error } = await db.from(tabela).insert([dados]).select();
+  if(error) throw error;
+  return data[0];
+}
+async function dbAtualizar(tabela, id, dados) {
+  const { error } = await db.from(tabela).update(dados).eq('id', id);
+  if(error) throw error;
+}
+async function dbExcluir(tabela, id) {
+  const { error } = await db.from(tabela).delete().eq('id', id);
+  if(error) throw error;
+}
+
+async function carregarTodosDados() {
+  showToast('Carregando dados...', 'info');
+  const [membros, congregacoes, eventos, atas, usuarios, inscricoes] = await Promise.all([
+    dbCarregar('membros', 'nome'),
+    dbCarregar('congregacoes', 'nome'),
+    dbCarregar('eventos', 'data_evento'),
+    dbCarregar('atas', 'data_ata'),
+    dbCarregar('usuarios', 'nome'),
+    dbCarregar('inscricoes'),
+  ]);
+  STATE.membros = membros.map(m => ({
+    id: m.id, nome: m.nome||'', cpf: m.cpf||'', rg: m.rg||'',
+    nasc: m.data_nascimento||'', sexo: m.sexo||'', estadoCivil: m.estado_civil||'',
+    natural: m.naturalidade||'', profissao: m.profissao||'',
+    situacao: m.situacao||'congregado', batismo: m.data_batismo||'',
+    congregacao: m.congregacao_nome||'Matriz (Sede Principal)',
+    cargo: m.cargo||'', entrada: m.data_entrada||'', status: m.status||'ativo',
+    obs: m.obs||'', tel: m.telefone||'', wpp: m.whatsapp||'',
+    email: m.email||'', end: m.endereco||'', cidade: m.cidade||'Araguaína', uf: m.uf||'TO',
+  }));
+  STATE.congregacoes = congregacoes.map(c => ({
+    id: c.id, nome: c.nome||'', pastor: c.pastor||'', end: c.endereco||'',
+    bairro: c.bairro||'', tel: c.telefone||'', data: c.data_fundacao||'',
+    status: c.status||'ativa', obs: c.obs||'',
+  }));
+  STATE.eventos = eventos.map(e => ({
+    id: e.id, nome: e.nome||'', tipo: e.tipo||'', data: e.data_evento||'',
+    hora: e.hora||'', local: e.local_evento||'', campo: e.campo||'Araguaína – TO',
+    min: e.ministro||'', desc: e.descricao||'',
+    inscricoes: inscricoes.filter(i=>i.evento_id===e.id).map(i=>({
+      dbId: i.id, nome: i.nome||'', cpf: i.cpf||'', tel: i.telefone||''
+    })),
+  }));
+  STATE.atas = atas.map(a => ({
+    id: a.id, tipo: a.tipo||'', data: a.data_ata||'', assunto: a.assunto||'',
+    secretario: a.secretario||'', num: a.numero||'', texto: a.texto||'',
+  }));
+  STATE.usuarios = usuarios.map(u => ({
+    id: u.id, nome: u.nome||'', login: u.login||'', senha: u.senha_hash||'',
+    perfil: u.perfil||'', congregacao: u.congregacao||'Matriz', status: u.status||'ativo',
+  }));
+  showToast('Dados carregados!', 'success');
+}
+
+// ════════════════════════════════════════════════════════
+//  UTILITÁRIOS
+// ════════════════════════════════════════════════════════
+function calcIdade(nasc) {
+  if (!nasc) return null;
+  const hoje = new Date();
+  const d = new Date(nasc);
+  let idade = hoje.getFullYear() - d.getFullYear();
+  const m = hoje.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && hoje.getDate() < d.getDate())) idade--;
+  return idade;
+}
+function getFaixa(nasc) {
+  const idade = calcIdade(nasc);
+  if (idade === null) return '';
+  if (idade <= 11) return 'crianca';
+  if (idade <= 17) return 'adolescente';
+  if (idade <= 35) return 'jovem';
+  return 'adulto';
+}
+function faixaLabel(f) {
+  return {crianca:'Criança',adolescente:'Adolescente',jovem:'Jovem',adulto:'Adulto'}[f] || '';
+}
+function faixaBadge(nasc) {
+  const f = getFaixa(nasc);
+  return `<span class="badge-pill badge-${f}">${faixaLabel(f)}</span>`;
+}
+function situacaoBadge(s) {
+  return `<span class="badge-pill badge-${s}">${s==='membro'?'Membro':'Congregado'}</span>`;
+}
+function statusBadge(s) {
+  return `<span class="badge-pill badge-${s}">${s}</span>`;
+}
+function perfilBadge(p) {
+  const map={admin:'Administrador',pastor_presidente:'Pastor Presidente',pastor_dirigente:'Pastor Dirigente',secretario:'Secretário(a)'};
+  const cls={admin:'badge-admin',pastor_presidente:'badge-pastor',pastor_dirigente:'badge-dirigente',secretario:'badge-secretario'};
+  return `<span class="badge-pill ${cls[p]}">${map[p]||p}</span>`;
+}
+function showToast(msg, tipo='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = tipo==='error'?'#b91c1c':tipo==='warn'?'#b45309':'#15803d';
+  t.style.display = 'block';
+  setTimeout(()=>t.style.display='none', 3200);
+}
+function formatDate(d) {
+  if (!d) return '';
+  const [y,m,dd] = d.split('-');
+  return `${dd}/${m}/${y}`;
+}
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// Click outside modal
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if(e.target===el) el.classList.remove('open'); });
+});
+
+// ════════════════════════════════════════════════════════
+//  LOGIN
+// ════════════════════════════════════════════════════════
+async function doLogin() {
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const role = document.getElementById('login-role').value;
+  // Primeiro tenta banco online, fallback para lista local
+  let found = null;
+  try {
+    const { data } = await db.from('usuarios')
+      .select('*').eq('login', user).eq('senha_hash', pass)
+      .eq('perfil', role).eq('status', 'ativo').single();
+    if(data) found = { id:data.id, nome:data.nome, login:data.login, senha:data.senha_hash, perfil:data.perfil, congregacao:data.congregacao, status:data.status };
+  } catch(e) {
+    found = STATE.usuarios.find(u => u.login===user && u.senha===pass && u.perfil===role && u.status==='ativo');
+  }
+  if (!found) {
+    document.getElementById('login-error').style.display = 'flex';
+    return;
+  }
+  STATE.currentUser = found;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  const perfilMap = {admin:'Acesso Total',pastor_presidente:'Pastor Presidente',pastor_dirigente:'Pastor Dirigente',secretario:'Secretário(a)'};
+  document.getElementById('sidebar-name').textContent = found.nome;
+  document.getElementById('sidebar-role').textContent = perfilMap[found.perfil]||found.perfil;
+  document.getElementById('sidebar-avatar').textContent = found.nome.charAt(0);
+  document.getElementById('topbar-user').textContent = found.nome;
+  await carregarTodosDados();
+  showSection('dashboard');
+}
+document.getElementById('login-user').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+function doLogout() {
+  STATE.currentUser = null;
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-error').style.display = 'none';
+}
+
+// ════════════════════════════════════════════════════════
+//  NAVEGAÇÃO
+// ════════════════════════════════════════════════════════
+const sections = { dashboard:'Dashboard', membros:'Membros & Congregados', congregacoes:'Congregações', eventos:'Eventos', atas:'Atas & Registros', relatorios:'Relatórios Gerais', usuarios:'Usuários & Acesso', configuracoes:'Configurações' };
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  document.querySelectorAll('#sidebar nav a').forEach(a=>a.classList.remove('active'));
+  document.querySelector(`#sidebar nav a[onclick*="${id}"]`)?.classList.add('active');
+  document.getElementById('page-title').textContent = sections[id]||id;
+  if(id==='dashboard') renderDashboard();
+  if(id==='membros') { renderMembros(); populateCongregacaoFilter(); }
+  if(id==='congregacoes') renderCongregacoes();
+  if(id==='eventos') renderEventos();
+  if(id==='atas') renderAtas();
+  if(id==='relatorios') renderRelatorios();
+  if(id==='usuarios') renderUsuarios();
+}
+
+// ════════════════════════════════════════════════════════
+//  TABS internas
+// ════════════════════════════════════════════════════════
+function switchTab(tabId, el) {
+  const parent = el.closest('.tabs');
+  parent.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  const modal = el.closest('.modal-body');
+  ['dados-pessoais','dados-eclesiasticos','dados-contato'].forEach(id=>{
+    const el2 = document.getElementById(id);
+    if(el2) el2.style.display = id===tabId?'block':'none';
+  });
+}
+function showRel(id, el) {
+  const parent = el.closest('.tabs');
+  parent.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.rel-section').forEach(s=>s.style.display='none');
+  document.getElementById(id).style.display='block';
+}
+
+// ════════════════════════════════════════════════════════
+//  DASHBOARD
+// ════════════════════════════════════════════════════════
+function renderDashboard() {
+  const membros = STATE.membros;
+  const totalMembros = membros.filter(m=>m.situacao==='membro'&&m.status==='ativo').length;
+  const totalCong = membros.filter(m=>m.situacao==='congregado'&&m.status==='ativo').length;
+  const criancas = membros.filter(m=>getFaixa(m.nasc)==='crianca').length;
+  const adolescentes = membros.filter(m=>getFaixa(m.nasc)==='adolescente').length;
+  const jovens = membros.filter(m=>getFaixa(m.nasc)==='jovem').length;
+  const adultos = membros.filter(m=>getFaixa(m.nasc)==='adulto').length;
+  const homens = membros.filter(m=>m.sexo==='Masculino'&&m.status==='ativo').length;
+  const mulheres = membros.filter(m=>m.sexo==='Feminino'&&m.status==='ativo').length;
+
+  document.getElementById('dash-stats').innerHTML = `
+    <div class="stat-card accent"><div class="stat-label">Total de Pessoas</div><div class="stat-val">${membros.length}</div><div class="stat-sub">Ativos no sistema</div></div>
+    <div class="stat-card success"><div class="stat-label">Membros (batizados)</div><div class="stat-val">${totalMembros}</div><div class="stat-sub">Com batismo registrado</div></div>
+    <div class="stat-card warn"><div class="stat-label">Congregados</div><div class="stat-val">${totalCong}</div><div class="stat-sub">Sem batismo</div></div>
+    <div class="stat-card info"><div class="stat-label">Congregações</div><div class="stat-val">${STATE.congregacoes.length}</div><div class="stat-sub">Vinculadas à Matriz</div></div>
+    <div class="stat-card"><div class="stat-label">Homens</div><div class="stat-val">${homens}</div><div class="stat-sub">Ativos</div></div>
+    <div class="stat-card"><div class="stat-label">Mulheres</div><div class="stat-val">${mulheres}</div><div class="stat-sub">Ativas</div></div>
+  `;
+  document.getElementById('dash-faixas').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      ${barRow('Crianças (0-11)', criancas, membros.length, '#15803d')}
+      ${barRow('Adolescentes (12-17)', adolescentes, membros.length, '#4c1d95')}
+      ${barRow('Jovens (18-35)', jovens, membros.length, '#831843')}
+      ${barRow('Adultos (36+)', adultos, membros.length, '#0c4a6e')}
+    </div>
+  `;
+  const recentes = [...STATE.membros].reverse().slice(0,5);
+  document.getElementById('dash-recentes').innerHTML = recentes.length ? recentes.map(m=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+      <div style="width:32px;height:32px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">${m.nome.charAt(0)}</div>
+      <div><div style="font-size:13.5px;font-weight:500;">${m.nome}</div><div style="font-size:12px;color:var(--text3);">${m.situacao==='membro'?'Membro':'Congregado'} • ${m.congregacao||'Matriz'}</div></div>
+    </div>`).join('') : '<p class="text-sm">Nenhum cadastro ainda.</p>';
+
+  document.getElementById('dash-congregacoes').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;">
+      ${STATE.congregacoes.map(c=>{
+        const mem = STATE.membros.filter(m=>m.congregacao===c.nome&&m.situacao==='membro').length;
+        const cng = STATE.membros.filter(m=>m.congregacao===c.nome&&m.situacao==='congregado').length;
+        return `<div class="stat-card" style="border-left:4px solid var(--primary-light);">
+          <div style="font-weight:600;font-size:13.5px;">${c.nome}</div>
+          <div class="text-sm" style="margin-top:4px;">${c.pastor||'Sem dirigente'}</div>
+          <div style="margin-top:8px;display:flex;gap:8px;font-size:12px;">
+            <span class="chip">${mem} membros</span><span class="chip">${cng} congregados</span>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+function barRow(label, val, total, color) {
+  const pct = total ? Math.round(val/total*100) : 0;
+  return `<div>
+    <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px;">
+      <span>${label}</span><span style="font-weight:600;">${val} <span style="font-weight:400;color:var(--text3);">(${pct}%)</span></span>
+    </div>
+    <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden;">
+      <div style="height:100%;width:${pct}%;background:${color};border-radius:4px;transition:width .5s;"></div>
+    </div>
+  </div>`;
+}
+
+// ════════════════════════════════════════════════════════
+//  MEMBROS
+// ════════════════════════════════════════════════════════
+let membroEditId = null;
+function populateCongregacaoFilter() {
+  const sel = document.getElementById('filter-congregacao');
+  sel.innerHTML = '<option value="">Todas as congregações</option>';
+  STATE.congregacoes.forEach(c=>sel.innerHTML+=`<option>${c.nome}</option>`);
+}
+function filterMembros(tipo, el) {
+  STATE.membroFilter = tipo;
+  el.closest('.tabs').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderMembros();
+}
+function renderMembros() {
+  const q = document.getElementById('search-membros').value.toLowerCase();
+  const cg = document.getElementById('filter-congregacao')?.value||'';
+  let data = STATE.membros;
+  const f = STATE.membroFilter;
+  if(f==='membro') data = data.filter(m=>m.situacao==='membro');
+  else if(f==='congregado') data = data.filter(m=>m.situacao==='congregado');
+  else if(['crianca','adolescente','jovem','adulto'].includes(f)) data = data.filter(m=>getFaixa(m.nasc)===f);
+  else if(f==='homem') data = data.filter(m=>m.sexo==='Masculino');
+  else if(f==='mulher') data = data.filter(m=>m.sexo==='Feminino');
+  if(cg) data = data.filter(m=>m.congregacao===cg);
+  if(q) data = data.filter(m=>m.nome.toLowerCase().includes(q)||m.cpf.includes(q)||m.tel.includes(q));
+  const tbody = document.getElementById('tbody-membros');
+  tbody.innerHTML = data.length ? data.map(m=>`<tr>
+    <td style="font-weight:500;">${m.nome}</td>
+    <td>${formatDate(m.nasc)} <span style="color:var(--text3);font-size:12px;">(${calcIdade(m.nasc)} anos)</span></td>
+    <td>${faixaBadge(m.nasc)}</td>
+    <td>${situacaoBadge(m.situacao)}</td>
+    <td>${m.sexo==='Masculino'?'♂ M':'♀ F'}</td>
+    <td style="font-size:12.5px;">${m.congregacao||'Matriz'}</td>
+    <td style="font-size:12.5px;">${m.tel||'-'}</td>
+    <td><div style="display:flex;gap:6px;">
+      <button class="btn btn-outline btn-sm" onclick="editarMembro(${m.id})">✏️</button>
+      <button class="btn btn-danger btn-sm" onclick="excluirMembro(${m.id})">🗑️</button>
+    </div></td>
+  </tr>`).join('') : `<tr><td colspan="8" class="empty-state"><div class="empty-icon">👤</div><p>Nenhum registro encontrado.</p></td></tr>`;
+}
+function populateCongregacaoSelect(selId) {
+  const sel = document.getElementById(selId);
+  sel.innerHTML = '<option value="Matriz (Sede Principal)">Matriz (Sede Principal)</option>';
+  STATE.congregacoes.forEach(c=>{if(c.nome!=='Matriz (Sede Principal)')sel.innerHTML+=`<option>${c.nome}</option>`});
+}
+function openModalMembro() {
+  membroEditId = null;
+  document.getElementById('modal-membro-title').textContent = 'Novo Cadastro de Pessoa';
+  ['m-nome','m-cpf','m-rg','m-nasc','m-natural','m-profissao','m-batismo','m-obs','m-tel','m-wpp','m-email','m-end','m-cidade','m-uf'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value=id==='m-cidade'?'Araguaína':id==='m-uf'?'TO':'';
+  });
+  populateCongregacaoSelect('m-congregacao-link');
+  switchTab('dados-pessoais',document.querySelector('#modal-membro .tab'));
+  openModal('modal-membro');
+}
+// override the button call
+document.querySelector('[onclick="openModal(\'modal-membro\')"]')?.setAttribute('onclick',"openModalMembro()");
+
+async function salvarMembro() {
+  const nome = document.getElementById('m-nome').value.trim();
+  const nasc = document.getElementById('m-nasc').value;
+  const sexo = document.getElementById('m-sexo').value;
+  if(!nome||!nasc||!sexo) { showToast('Preencha os campos obrigatórios (Nome, Nascimento, Sexo).','error'); return; }
+  const dados = {
+    nome, cpf:document.getElementById('m-cpf').value, rg:document.getElementById('m-rg').value,
+    data_nascimento:nasc, sexo, estado_civil:document.getElementById('m-estado-civil').value,
+    naturalidade:document.getElementById('m-natural').value, profissao:document.getElementById('m-profissao').value,
+    situacao:document.getElementById('m-situacao').value,
+    data_batismo:document.getElementById('m-batismo').value||null,
+    congregacao_nome:document.getElementById('m-congregacao-link').value,
+    cargo:document.getElementById('m-cargo').value,
+    data_entrada:document.getElementById('m-entrada').value||null,
+    status:document.getElementById('m-status').value, obs:document.getElementById('m-obs').value,
+    telefone:document.getElementById('m-tel').value, whatsapp:document.getElementById('m-wpp').value,
+    email:document.getElementById('m-email').value, endereco:document.getElementById('m-end').value,
+    cidade:document.getElementById('m-cidade').value, uf:document.getElementById('m-uf').value,
+  };
+  try {
+    if(membroEditId) {
+      await dbAtualizar('membros', membroEditId, dados);
+    } else {
+      await dbInserir('membros', dados);
+    }
+    closeModal('modal-membro');
+    await carregarTodosDados();
+    renderMembros(); renderDashboard();
+    showToast(membroEditId?'Cadastro atualizado!':'Cadastro realizado com sucesso!');
+    membroEditId = null;
+  } catch(e) {
+    showToast('Erro ao salvar: '+e.message,'error');
+  }
+}
+function editarMembro(id) {
+  const m = STATE.membros.find(x=>x.id===id);
+  if(!m) return;
+  membroEditId = id;
+  document.getElementById('modal-membro-title').textContent = 'Editar Cadastro';
+  populateCongregacaoSelect('m-congregacao-link');
+  const fields = {
+    'm-nome':m.nome,'m-cpf':m.cpf,'m-rg':m.rg,'m-nasc':m.nasc,'m-sexo':m.sexo,
+    'm-estado-civil':m.estadoCivil,'m-natural':m.natural,'m-profissao':m.profissao,
+    'm-situacao':m.situacao,'m-batismo':m.batismo,'m-congregacao-link':m.congregacao,
+    'm-cargo':m.cargo,'m-entrada':m.entrada,'m-status':m.status,'m-obs':m.obs,
+    'm-tel':m.tel,'m-wpp':m.wpp,'m-email':m.email,'m-end':m.end,
+    'm-cidade':m.cidade,'m-uf':m.uf,
+  };
+  Object.entries(fields).forEach(([k,v])=>{const el=document.getElementById(k);if(el)el.value=v||'';});
+  switchTab('dados-pessoais',document.querySelector('#modal-membro .tab'));
+  openModal('modal-membro');
+}
+async function excluirMembro(id) {
+  if(!confirm('Excluir este cadastro?')) return;
+  try {
+    await dbExcluir('membros', id);
+    STATE.membros = STATE.membros.filter(m=>m.id!==id);
+    renderMembros(); renderDashboard();
+    showToast('Cadastro excluído.','warn');
+  } catch(e) { showToast('Erro ao excluir: '+e.message,'error'); }
+}
+
+// ════════════════════════════════════════════════════════
+//  CONGREGAÇÕES
+// ════════════════════════════════════════════════════════
+function renderCongregacoes() {
+  const tbody = document.getElementById('tbody-congregacoes');
+  tbody.innerHTML = STATE.congregacoes.map(c=>{
+    const mem = STATE.membros.filter(m=>m.congregacao===c.nome&&m.situacao==='membro').length;
+    const cng = STATE.membros.filter(m=>m.congregacao===c.nome&&m.situacao==='congregado').length;
+    return `<tr>
+      <td style="font-weight:500;">${c.nome}</td>
+      <td>${c.pastor||'<span style="color:var(--text3);">Não definido</span>'}</td>
+      <td style="font-size:12.5px;">${c.end||'-'}${c.bairro?', '+c.bairro:''}</td>
+      <td><span class="badge-pill badge-membro">${mem}</span></td>
+      <td><span class="badge-pill badge-congregado">${cng}</span></td>
+      <td><div style="display:flex;gap:6px;">
+        <button class="btn btn-outline btn-sm" onclick="verCongregacao(${c.id})">👁️ Ver</button>
+        <button class="btn btn-danger btn-sm" onclick="excluirCongregacao(${c.id})">🗑️</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+  popularPastorSelect();
+  popularUserCongSelect();
+}
+function popularPastorSelect() {
+  const pastores = STATE.usuarios.filter(u=>u.perfil==='pastor_dirigente'||u.perfil==='pastor_presidente');
+  const sel = document.getElementById('cg-pastor');
+  if(!sel) return;
+  sel.innerHTML = '<option value="">Selecione o pastor</option>' + pastores.map(p=>`<option>${p.nome}</option>`).join('');
+}
+function popularUserCongSelect() {
+  const sel = document.getElementById('us-congregacao');
+  if(!sel) return;
+  sel.innerHTML = '<option value="Matriz (Sede Principal)">Matriz (Sede Principal)</option>';
+  STATE.congregacoes.forEach(c=>sel.innerHTML+=`<option>${c.nome}</option>`);
+}
+async function salvarCongregacao() {
+  const nome = document.getElementById('cg-nome').value.trim();
+  if(!nome) { showToast('Informe o nome da congregação.','error'); return; }
+  const dados = {
+    nome,
+    pastor: document.getElementById('cg-pastor').value,
+    endereco: document.getElementById('cg-end').value,
+    bairro: document.getElementById('cg-bairro').value,
+    telefone: document.getElementById('cg-tel').value,
+    data_fundacao: document.getElementById('cg-data').value||null,
+    status: document.getElementById('cg-status').value,
+    obs: document.getElementById('cg-obs').value,
+  };
+  try {
+    await dbInserir('congregacoes', dados);
+    closeModal('modal-congregacao');
+    await carregarTodosDados();
+    renderCongregacoes();
+    showToast('Congregação cadastrada!');
+    document.getElementById('cg-nome').value='';
+  } catch(e) { showToast('Erro ao salvar: '+e.message,'error'); }
+}
+async function excluirCongregacao(id) {
+  if(!confirm('Excluir esta congregação?')) return;
+  try {
+    await dbExcluir('congregacoes', id);
+    STATE.congregacoes = STATE.congregacoes.filter(c=>c.id!==id);
+    renderCongregacoes(); showToast('Congregação excluída.','warn');
+  } catch(e) { showToast('Erro ao excluir: '+e.message,'error'); }
+}
+function verCongregacao(id) {
+  const c = STATE.congregacoes.find(x=>x.id===id);
+  if(!c) return;
+  const membros = STATE.membros.filter(m=>m.congregacao===c.nome);
+  alert(`${c.nome}\nPastor: ${c.pastor||'Não definido'}\nEndereço: ${c.end||'-'}\nTotal de pessoas: ${membros.length}\nMembros: ${membros.filter(m=>m.situacao==='membro').length}\nCongregados: ${membros.filter(m=>m.situacao==='congregado').length}`);
+}
+
+// ════════════════════════════════════════════════════════
+//  EVENTOS
+// ════════════════════════════════════════════════════════
+function renderEventos() {
+  const div = document.getElementById('lista-eventos');
+  div.innerHTML = STATE.eventos.length ? STATE.eventos.map(e=>`
+    <div class="card" style="overflow:hidden;">
+      <div style="background:var(--primary);color:#fff;padding:14px 18px;">
+        <div style="font-size:11px;font-weight:600;opacity:.7;text-transform:uppercase;letter-spacing:.06em;">${e.tipo}</div>
+        <div style="font-size:16px;font-weight:700;font-family:'Sora',sans-serif;margin-top:2px;">${e.nome}</div>
+      </div>
+      <div class="card-body" style="padding:14px 18px;">
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--text2);margin-bottom:12px;">
+          <div>📅 <strong>${formatDate(e.data)}</strong>${e.hora?' às '+e.hora:''}</div>
+          <div>📍 ${e.local}</div>
+          <div>🎤 ${e.min||'–'}</div>
+          ${e.desc?`<div style="font-size:12.5px;color:var(--text3);margin-top:4px;">${e.desc}</div>`:''}
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span class="chip">🎫 ${e.inscricoes?e.inscricoes.length:0} inscritos</span>
+          <button class="btn btn-primary btn-sm" onclick="abrirInscricoes(${e.id})">Gerenciar Inscrições</button>
+          <button class="btn btn-danger btn-sm" onclick="excluirEvento(${e.id})">🗑️</button>
+        </div>
+      </div>
+    </div>`).join('') : `<div class="empty-state" style="grid-column:1/-1;"><div class="empty-icon">📅</div><p>Nenhum evento cadastrado.</p></div>`;
+}
+async function salvarEvento() {
+  const nome = document.getElementById('ev-nome').value.trim();
+  const data = document.getElementById('ev-data').value;
+  if(!nome||!data) { showToast('Preencha nome e data do evento.','error'); return; }
+  const dados = {
+    nome, tipo:document.getElementById('ev-tipo').value,
+    data_evento:data, hora:document.getElementById('ev-hora').value,
+    local_evento:document.getElementById('ev-local').value,
+    campo:document.getElementById('ev-campo').value,
+    ministro:document.getElementById('ev-min').value,
+    descricao:document.getElementById('ev-desc').value,
+  };
+  try {
+    await dbInserir('eventos', dados);
+    closeModal('modal-evento');
+    await carregarTodosDados();
+    renderEventos();
+    showToast('Evento cadastrado!');
+  } catch(e) { showToast('Erro ao salvar: '+e.message,'error'); }
+}
+async function excluirEvento(id) {
+  if(!confirm('Excluir este evento?')) return;
+  try {
+    await dbExcluir('eventos', id);
+    STATE.eventos = STATE.eventos.filter(e=>e.id!==id);
+    renderEventos(); showToast('Evento excluído.','warn');
+  } catch(e) { showToast('Erro ao excluir: '+e.message,'error'); }
+}
+function abrirInscricoes(id) {
+  STATE.eventoAtivo = id;
+  const ev = STATE.eventos.find(e=>e.id===id);
+  document.getElementById('det-ev-title').textContent = '🎫 ' + ev.nome;
+  renderInscricoes();
+  openModal('modal-evento-detalhe');
+}
+function renderInscricoes() {
+  const ev = STATE.eventos.find(e=>e.id===STATE.eventoAtivo);
+  if(!ev) return;
+  const tbody = document.getElementById('tbody-inscricoes');
+  tbody.innerHTML = ev.inscricoes&&ev.inscricoes.length ? ev.inscricoes.map((ins,i)=>`<tr>
+    <td style="font-weight:500;">${ins.nome}</td>
+    <td style="font-size:12.5px;">${ins.cpf||'-'}</td>
+    <td style="font-size:12.5px;">${ins.tel||'-'}</td>
+    <td style="font-size:12.5px;">Araguaína – TO</td>
+    <td><button class="btn btn-danger btn-sm" onclick="removerInscricao(${i})">🗑️</button></td>
+  </tr>`).join('') : `<tr><td colspan="5" class="text-center text-sm" style="padding:20px;">Nenhum inscrito ainda.</td></tr>`;
+}
+async function addInscricao() {
+  const nome = document.getElementById('insc-nome').value.trim();
+  if(!nome) { showToast('Informe o nome do inscrito.','error'); return; }
+  const ev = STATE.eventos.find(e=>e.id===STATE.eventoAtivo);
+  const dados = { evento_id: ev.id, nome, cpf:document.getElementById('insc-cpf').value, telefone:document.getElementById('insc-tel').value, campo:'Araguaína – TO' };
+  try {
+    const saved = await dbInserir('inscricoes', dados);
+    if(!ev.inscricoes) ev.inscricoes=[];
+    ev.inscricoes.push({ dbId:saved.id, nome, cpf:dados.cpf, tel:dados.telefone });
+    document.getElementById('insc-nome').value='';
+    document.getElementById('insc-cpf').value='';
+    document.getElementById('insc-tel').value='';
+    renderInscricoes(); showToast('Inscrição adicionada!');
+  } catch(e) { showToast('Erro: '+e.message,'error'); }
+}
+async function removerInscricao(idx) {
+  const ev = STATE.eventos.find(e=>e.id===STATE.eventoAtivo);
+  const ins = ev.inscricoes[idx];
+  try {
+    if(ins.dbId) await dbExcluir('inscricoes', ins.dbId);
+    ev.inscricoes.splice(idx,1); renderInscricoes();
+  } catch(e) { showToast('Erro: '+e.message,'error'); }
+}
+function exportInscricoes() {
+  const ev = STATE.eventos.find(e=>e.id===STATE.eventoAtivo);
+  if(!ev||!ev.inscricoes||!ev.inscricoes.length) { showToast('Sem inscrições para exportar.','warn'); return; }
+  let csv = 'Nome,CPF,Telefone,Campo\n';
+  ev.inscricoes.forEach(i=>csv+=`"${i.nome}","${i.cpf||''}","${i.tel||''}","Araguaína – TO"\n`);
+  download(csv, `inscricoes_${ev.nome.replace(/\s/g,'_')}.csv`,'text/csv');
+}
+
+// ════════════════════════════════════════════════════════
+//  ATAS
+// ════════════════════════════════════════════════════════
+function renderAtas() {
+  const tbody = document.getElementById('tbody-atas');
+  tbody.innerHTML = STATE.atas.length ? STATE.atas.map(a=>`<tr>
+    <td><span class="badge-pill badge-info" style="background:#dbeafe;color:#1e3a8a;">${a.tipo}</span></td>
+    <td style="font-weight:500;">${a.assunto}</td>
+    <td>${formatDate(a.data)}</td>
+    <td style="font-size:12.5px;">${a.secretario||'-'}</td>
+    <td style="font-size:12px;color:var(--text3);">${a.num||'-'}</td>
+    <td><div style="display:flex;gap:6px;">
+      <button class="btn btn-outline btn-sm" onclick="verAta(${a.id})">👁️ Ver</button>
+      <button class="btn btn-danger btn-sm" onclick="excluirAta(${a.id})">🗑️</button>
+    </div></td>
+  </tr>`).join('') : `<tr><td colspan="6" class="empty-state"><div class="empty-icon">📋</div><p>Nenhuma ata registrada.</p></td></tr>`;
+}
+async function salvarAta() {
+  const assunto = document.getElementById('at-assunto').value.trim();
+  const data = document.getElementById('at-data').value;
+  if(!assunto||!data) { showToast('Preencha assunto e data.','error'); return; }
+  const dados = {
+    tipo:document.getElementById('at-tipo').value, data_ata:data,
+    assunto, secretario:document.getElementById('at-secretario').value,
+    numero:document.getElementById('at-num').value, texto:document.getElementById('at-texto').value,
+  };
+  try {
+    await dbInserir('atas', dados);
+    closeModal('modal-ata');
+    await carregarTodosDados();
+    renderAtas(); showToast('Ata registrada!');
+  } catch(e) { showToast('Erro ao salvar: '+e.message,'error'); }
+}
+async function excluirAta(id) {
+  if(!confirm('Excluir este registro?')) return;
+  try {
+    await dbExcluir('atas', id);
+    STATE.atas = STATE.atas.filter(a=>a.id!==id);
+    renderAtas(); showToast('Registro excluído.','warn');
+  } catch(e) { showToast('Erro: '+e.message,'error'); }
+}
+function verAta(id) {
+  const a = STATE.atas.find(x=>x.id===id);
+  if(!a) return;
+  const w = window.open('','_blank','width=700,height=600');
+  w.document.write(`<html><head><title>${a.assunto}</title>
+  <style>body{font-family:Arial,sans-serif;padding:40px;color:#222;}h1{font-size:18px;}p{font-size:14px;line-height:1.7;}</style>
+  </head><body>
+  <div style="text-align:center;border-bottom:2px solid #1a3a6e;padding-bottom:16px;margin-bottom:20px;">
+    <strong style="font-size:16px;color:#1a3a6e;">ASSEMBLEIA DE DEUS NAÇÃO MADUREIRA</strong><br>
+    <span style="font-size:13px;">Campo de Araguaína – Tocantins</span>
+  </div>
+  <h1>${a.assunto}</h1>
+  <p><strong>Tipo:</strong> ${a.tipo} | <strong>Data:</strong> ${formatDate(a.data)} | <strong>Nº:</strong> ${a.num||'–'}</p>
+  <p><strong>Secretário(a):</strong> ${a.secretario||'–'}</p>
+  <hr style="margin:16px 0;">
+  <p style="white-space:pre-wrap;">${a.texto||'(sem conteúdo registrado)'}</p>
+  <div style="margin-top:60px;text-align:right;font-size:13px;">
+    <div style="border-top:1px solid #999;display:inline-block;padding-top:6px;min-width:200px;">Assinatura / Secretário(a)</div>
+  </div>
+  <script>window.print();<\/script></body></html>`);
+}
+
+// ════════════════════════════════════════════════════════
+//  RELATÓRIOS
+// ════════════════════════════════════════════════════════
+function renderRelatorios() {
+  const m = STATE.membros;
+  const totalMem = m.filter(x=>x.situacao==='membro').length;
+  const totalCong = m.filter(x=>x.situacao==='congregado').length;
+  const criancas = m.filter(x=>getFaixa(x.nasc)==='crianca').length;
+  const adolescentes = m.filter(x=>getFaixa(x.nasc)==='adolescente').length;
+  const jovens = m.filter(x=>getFaixa(x.nasc)==='jovem').length;
+  const adultos = m.filter(x=>getFaixa(x.nasc)==='adulto').length;
+
+  document.getElementById('rel-geral').innerHTML = `
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px;"><button class="btn btn-primary btn-sm" onclick="imprimirRelatorio('rel-geral')">🖨️ Imprimir</button></div>
+    <div class="card mb-4"><div class="card-header"><h3>Relatório Geral – AD Nação Madureira – Araguaína/TO</h3></div>
+    <div class="card-body"><div class="stats-grid">
+      <div class="stat-card accent"><div class="stat-label">Total Geral</div><div class="stat-val">${m.length}</div></div>
+      <div class="stat-card success"><div class="stat-label">Membros</div><div class="stat-val">${totalMem}</div></div>
+      <div class="stat-card warn"><div class="stat-label">Congregados</div><div class="stat-val">${totalCong}</div></div>
+      <div class="stat-card info"><div class="stat-label">Crianças</div><div class="stat-val">${criancas}</div></div>
+      <div class="stat-card"><div class="stat-label">Adolescentes</div><div class="stat-val">${adolescentes}</div></div>
+      <div class="stat-card"><div class="stat-label">Jovens</div><div class="stat-val">${jovens}</div></div>
+      <div class="stat-card"><div class="stat-label">Adultos</div><div class="stat-val">${adultos}</div></div>
+      <div class="stat-card"><div class="stat-label">Congregações</div><div class="stat-val">${STATE.congregacoes.length}</div></div>
+    </div></div></div>
+    <div class="card"><div class="card-header"><h3>Por Congregação</h3></div><div class="card-body">
+    <div class="table-wrap"><table><thead><tr><th>Congregação</th><th>Pastor</th><th>Membros</th><th>Congregados</th><th>Crianças</th><th>Adolesc.</th><th>Total</th></tr></thead>
+    <tbody>${STATE.congregacoes.map(c=>{
+      const mm=STATE.membros.filter(x=>x.congregacao===c.nome);
+      return `<tr><td style="font-weight:500;">${c.nome}</td><td style="font-size:12.5px;">${c.pastor||'-'}</td>
+      <td>${mm.filter(x=>x.situacao==='membro').length}</td><td>${mm.filter(x=>x.situacao==='congregado').length}</td>
+      <td>${mm.filter(x=>getFaixa(x.nasc)==='crianca').length}</td>
+      <td>${mm.filter(x=>getFaixa(x.nasc)==='adolescente').length}</td>
+      <td><strong>${mm.length}</strong></td></tr>`;
+    }).join('')}</tbody></table></div></div></div>`;
+
+  document.getElementById('rel-membros').innerHTML = `
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px;gap:8px;">
+      <button class="btn btn-outline btn-sm" onclick="exportarLista('membros')">⬇ CSV</button>
+      <button class="btn btn-primary btn-sm" onclick="imprimirRelatorio('rel-membros')">🖨️ Imprimir</button>
+    </div>
+    <div class="card"><div class="card-header"><h3>Lista Completa de Membros e Congregados</h3></div><div class="card-body">
+    <div class="table-wrap"><table><thead><tr><th>Nome</th><th>Nasc.</th><th>Faixa</th><th>Situação</th><th>Sexo</th><th>Congregação</th><th>Telefone</th></tr></thead>
+    <tbody>${STATE.membros.map(m=>`<tr>
+      <td style="font-weight:500;">${m.nome}</td><td>${formatDate(m.nasc)}</td>
+      <td>${faixaBadge(m.nasc)}</td><td>${situacaoBadge(m.situacao)}</td>
+      <td>${m.sexo==='Masculino'?'M':'F'}</td>
+      <td style="font-size:12.5px;">${m.congregacao||'Matriz'}</td>
+      <td style="font-size:12.5px;">${m.tel||'-'}</td>
+    </tr>`).join('')}</tbody></table></div></div></div>`;
+
+  document.getElementById('rel-congregacoes').innerHTML = `
+    <div class="card"><div class="card-header"><h3>Relatório de Congregações</h3></div><div class="card-body">
+    <div class="table-wrap"><table><thead><tr><th>Congregação</th><th>Pastor Dirigente</th><th>Fundação</th><th>Status</th><th>Membros</th><th>Congregados</th></tr></thead>
+    <tbody>${STATE.congregacoes.map(c=>{
+      const mm=STATE.membros.filter(x=>x.congregacao===c.nome);
+      return `<tr><td style="font-weight:500;">${c.nome}</td><td>${c.pastor||'-'}</td>
+      <td>${formatDate(c.data)||'-'}</td><td>${statusBadge(c.status)}</td>
+      <td>${mm.filter(x=>x.situacao==='membro').length}</td><td>${mm.filter(x=>x.situacao==='congregado').length}</td></tr>`;
+    }).join('')}</tbody></table></div></div></div>`;
+
+  document.getElementById('rel-eventos').innerHTML = `
+    <div class="card"><div class="card-header"><h3>Relatório de Eventos</h3></div><div class="card-body">
+    <div class="table-wrap"><table><thead><tr><th>Evento</th><th>Tipo</th><th>Data</th><th>Local</th><th>Inscritos</th></tr></thead>
+    <tbody>${STATE.eventos.map(e=>`<tr>
+      <td style="font-weight:500;">${e.nome}</td><td style="font-size:12.5px;">${e.tipo}</td>
+      <td>${formatDate(e.data)}</td><td style="font-size:12.5px;">${e.local}</td>
+      <td>${e.inscricoes?e.inscricoes.length:0}</td>
+    </tr>`).join('')}</tbody></table></div></div></div>`;
+}
+function imprimirRelatorio(secId) { window.print(); }
+
+// ════════════════════════════════════════════════════════
+//  USUÁRIOS
+// ════════════════════════════════════════════════════════
+function renderUsuarios() {
+  const tbody = document.getElementById('tbody-usuarios');
+  tbody.innerHTML = STATE.usuarios.map(u=>`<tr>
+    <td style="font-weight:500;">${u.nome}</td>
+    <td style="font-size:12.5px;">${u.login}</td>
+    <td>${perfilBadge(u.perfil)}</td>
+    <td style="font-size:12.5px;">${u.congregacao||'Matriz'}</td>
+    <td>${statusBadge(u.status)}</td>
+    <td><button class="btn btn-danger btn-sm" onclick="excluirUsuario(${u.id})">🗑️</button></td>
+  </tr>`).join('');
+}
+async function salvarUsuario() {
+  const nome = document.getElementById('us-nome').value.trim();
+  const login = document.getElementById('us-login').value.trim();
+  const senha = document.getElementById('us-senha').value;
+  if(!nome||!login||!senha) { showToast('Preencha todos os campos.','error'); return; }
+  if(STATE.usuarios.find(u=>u.login===login)) { showToast('Login já existe!','error'); return; }
+  const dados = { nome, login, senha_hash:senha, perfil:document.getElementById('us-perfil').value, congregacao:document.getElementById('us-congregacao').value, status:document.getElementById('us-status').value };
+  try {
+    await dbInserir('usuarios', dados);
+    closeModal('modal-usuario');
+    await carregarTodosDados();
+    renderUsuarios(); showToast('Usuário criado!');
+  } catch(e) { showToast('Erro ao criar usuário: '+e.message,'error'); }
+}
+async function excluirUsuario(id) {
+  if(!confirm('Excluir este usuário?')) return;
+  try {
+    await dbExcluir('usuarios', id);
+    STATE.usuarios = STATE.usuarios.filter(u=>u.id!==id);
+    renderUsuarios(); showToast('Usuário excluído.','warn');
+  } catch(e) { showToast('Erro: '+e.message,'error'); }
+}
+
+// ════════════════════════════════════════════════════════
+//  EXPORTAR
+// ════════════════════════════════════════════════════════
+function exportarLista(tipo) {
+  let csv = '';
+  if(tipo==='membros') {
+    csv = 'Nome,CPF,Nascimento,Sexo,Faixa Etária,Situação,Congregação,Telefone,Status\n';
+    STATE.membros.forEach(m=>{
+      csv += `"${m.nome}","${m.cpf||''}","${formatDate(m.nasc)}","${m.sexo}","${faixaLabel(getFaixa(m.nasc))}","${m.situacao}","${m.congregacao||'Matriz'}","${m.tel||''}","${m.status}"\n`;
+    });
+    download(csv,'membros_ad_madureira.csv','text/csv');
+  } else if(tipo==='atas') {
+    csv = 'Tipo,Assunto,Data,Secretario,Numero\n';
+    STATE.atas.forEach(a=>csv+=`"${a.tipo}","${a.assunto}","${formatDate(a.data)}","${a.secretario||''}","${a.num||''}"\n`);
+    download(csv,'atas_ad_madureira.csv','text/csv');
+  }
+}
+function download(content, filename, type) {
+  const blob = new Blob(['\uFEFF'+content],{type:type+';charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+
+// ════════════════════════════════════════════════════════
+//  INICIALIZAR
+// ════════════════════════════════════════════════════════
+document.querySelectorAll("[onclick*=\"openModal('modal-membro')\"]").forEach(el=>{
+  el.setAttribute('onclick','openModalMembro()');
+});
+
+async function criarAdminInicial() {
+  try {
+    const { data, error } = await db.from('usuarios').select('id').limit(1);
+    if(!error && data && data.length === 0) {
+      await db.from('usuarios').insert([{
+        nome: 'Administrador Sistema', login: 'admin', senha_hash: 'admadureira2025',
+        perfil: 'admin', congregacao: 'Matriz (Sede Principal)', status: 'ativo'
+      }]);
+      await db.from('congregacoes').insert([{
+        nome: 'Matriz (Sede Principal)', pastor: '', endereco: 'Araguaina – TO',
+        bairro: 'Centro', status: 'ativa', obs: 'Sede principal do campo de Araguaina'
+      }]);
+    }
+  } catch(e) { console.log('Setup:', e.message); }
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
+  await criarAdminInicial();
+  populateCongregacaoFilter();
+  const hint = document.querySelector('#login-screen p');
+  if(hint) hint.innerHTML = 'Primeiro acesso: usuario <strong>admin</strong> / senha <strong>admadureira2025</strong>';
+});
+</script>
+</body>
+</html>
